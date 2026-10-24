@@ -54,9 +54,9 @@ basic maintenance tasks.
 
 **Key paths on the `main` volume:**
 
-- `store.json` — admin username and password (StartOS-managed)
-- `db.sqlite3` — LNDg Django sqlite database
-- `base-settings.py` — upstream-canonical Django settings (seeded per install/upgrade; used as the base layer when composing the subcontainer's `settings.py` at start)
+- `store.json`: admin username and password (StartOS-managed)
+- `db.sqlite3`: LNDg Django sqlite database
+- `base-settings.py`: upstream-canonical Django settings (seeded per install/upgrade; used as the base layer when composing the subcontainer's `settings.py` at start)
 
 ---
 
@@ -77,7 +77,7 @@ basic maintenance tasks.
    (no password yet) and `bootstrapSettings` writes the upstream-canonical
    `base-settings.py` onto the main volume.
 3. Because no admin password exists yet, a **critical task** appears
-   prompting you to run the **Admin Credentials** action. Run it — it
+   prompting you to run the **Admin Credentials** action. Run it. It
    generates a 22-character password, persists it to `store.json`, and
    reveals both the username and password. Save the password somewhere
    safe.
@@ -87,7 +87,7 @@ basic maintenance tasks.
    generated.
 5. Open the web UI and log in as `lndg-admin` with the retrieved password.
 6. If you ever forget the password, run the **Admin Credentials** action
-   again while the service is stopped — it resets the password and
+   again while the service is stopped. It resets the password and
    reveals the new value. The Django superuser gets re-synced on the next
    start.
 
@@ -100,32 +100,32 @@ basic maintenance tasks.
 | Field | Default | Purpose |
 |-------|---------|---------|
 | `adminUsername` | `lndg-admin` | Django superuser name |
-| `adminPassword` | Unset initially — generated on-demand by the **Admin Credentials** action | Django superuser password. Whenever this field is missing, a critical task appears prompting the user to create (first run) or reset (subsequent runs) the credentials. |
+| `adminPassword` | Unset initially, generated on-demand by the **Admin Credentials** action | Django superuser password. Whenever this field is missing, a critical task appears prompting the user to create (first run) or reset (subsequent runs) the credentials. |
 
 ### settings.py (base + overrides)
 
 `lndg/settings.py` is built from two independent layers:
 
-1. **Base** (`main:./base-settings.py`, persisted on volume) — upstream's
+1. **Base** (`main:./base-settings.py`, persisted on volume): upstream's
    canonical Django settings.py, written once per install/upgrade by
    `init/bootstrapSettings.ts`. That init step spins up a temp subcontainer
    (`sdk.SubContainer.withTemp`), calls `initialize.write_settings` via
    `python -c` (skipping upstream's embedded `initialize_django` phase so
    no ephemeral migrate/collectstatic/createsuperuser runs), and `cp`s the
-   generated file onto the main volume. Upstream owns this content —
+   generated file onto the main volume. Upstream owns this content:
    `LOGIN_REQUIRED`, `AUTH_PASSWORD_VALIDATORS`, `INSTALLED_APPS`,
    `MIDDLEWARE`, `REST_FRAMEWORK`, `SESSION_COOKIE_AGE`, etc. all flow
    through untouched.
 
 2. **Overrides** (composed in TypeScript via `composeOverrides()` in
-   `utils.ts`) — appended to the base on every service start. Python's
+   `utils.ts`): appended to the base on every service start. Python's
    last-assignment-wins semantics means these silently shadow upstream's
    defaults without mutating the base file.
 
 At daemon start, `main.ts` reads the base (reactive via
 `FileHelper.string.const()`) and writes the concatenation to the
 subcontainer's `/app/lndg/settings.py` via `appSub.writeFile`. The
-subcontainer rootfs is ephemeral — settings.py is composed fresh each
+subcontainer rootfs is ephemeral, so settings.py is composed fresh each
 start so interface add/remove propagates via the reactive hostname read.
 
 | Setting | Layer | Source |
@@ -133,9 +133,9 @@ start so interface add/remove propagates via the reactive hostname read.
 | `INSTALLED_APPS`, `MIDDLEWARE`, `TEMPLATES`, `AUTH_PASSWORD_VALIDATORS`, `REST_FRAMEWORK`, `LOGIN_REQUIRED`, `SESSION_COOKIE_AGE`, `SECRET_KEY`, `LND_*` | Base | Upstream `initialize.write_settings` output. `SECRET_KEY` is a random 64-char value upstream writes into `base-settings.py`; it persists on the volume across service restarts and rotates only on install/restore/upgrade. |
 | `DATABASES` | Override | sqlite at `/data/db.sqlite3` on the persistent volume |
 | `ALLOWED_HOSTS` | Override | `localhost`, `127.0.0.1`, `lndg.startos`, plus every hostname from the `ui` interface |
-| `CSRF_TRUSTED_ORIGINS` | Override | `https://lndg.startos` plus every UI hostname with both `http://` and `https://` schemes (belt-and-suspenders — see note below) |
+| `CSRF_TRUSTED_ORIGINS` | Override | `https://lndg.startos` plus every UI hostname with both `http://` and `https://` schemes (belt-and-suspenders; see note below) |
 | `SECURE_PROXY_SSL_HEADER`, `USE_X_FORWARDED_HOST` | Override | Tells Django to honor the `X-Forwarded-Proto` / `X-Forwarded-Host` headers set by StartOS's reverse proxy on the internal `10.0.3.0/24` network. Without this, Django sees the request as HTTP (the proxy terminated TLS) while the browser sent `Origin: https://...`, producing a CSRF Origin mismatch that 403s every POST. Analogue of nextcloud's `trusted_proxies` config. |
-| `CORS_ALLOW_CREDENTIALS`, `CORS_ORIGIN_ALLOW_ALL`, `GRPC_DNS_RESOLVER` | Override | Static — required for StartOS hostname/DNS behavior |
+| `CORS_ALLOW_CREDENTIALS`, `CORS_ORIGIN_ALLOW_ALL`, `GRPC_DNS_RESOLVER` | Override | Static, required for StartOS hostname/DNS behavior |
 | `LOGIN_URL`, `LOGIN_REDIRECT_URL` | Override | `/lndg-admin/login/` and `/` |
 
 ---
@@ -173,7 +173,7 @@ every startup.
 
 **Included in backup:**
 
-- `main` volume — includes `store.json`, `db.sqlite3`, and `base-settings.py`
+- `main` volume, including `store.json`, `db.sqlite3`, and `base-settings.py`
 
 **Restore behavior:**
 
@@ -183,7 +183,7 @@ every startup.
   `bootstrapSettings` runs on every init kind), so a backup taken against
   an older image version stays consistent with the current image.
 - LND macaroon and TLS cert are read live from the read-only LND dependency
-  mount (`/mnt/lnd`) — nothing to restore.
+  mount (`/mnt/lnd`), so there is nothing to restore.
 
 ---
 
@@ -208,7 +208,7 @@ and static file collection to complete after a fresh container rebuild.
 2. **LND mount is read-only.** LNDg reads the LND admin macaroon and TLS
    cert directly from the dependency mount at `/mnt/lnd`; no copy is kept
    on the LNDg volume.
-3. **Admin password is generated by the action, not pre-seeded.** On fresh
+3. **Admin password is generated by the action.** On fresh
    install the `adminPassword` field in `store.json` is absent, which
    triggers a critical task pointing at the **Admin Credentials** action.
    The action generates the password, persists it, and reveals it in the

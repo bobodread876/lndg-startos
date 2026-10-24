@@ -4,7 +4,7 @@ LNDg ships from a single source: the upstream-published `ghcr.io/cryptosharks131
 
 ## Determining the upstream version
 
-- **LNDg** ([cryptosharks131/lndg](https://github.com/cryptosharks131/lndg)) — latest GitHub release:
+- **LNDg** ([cryptosharks131/lndg](https://github.com/cryptosharks131/lndg)): latest GitHub release:
 
   ```sh
   gh release view -R cryptosharks131/lndg --json tagName -q .tagName
@@ -14,4 +14,4 @@ LNDg ships from a single source: the upstream-published `ghcr.io/cryptosharks131
 
 ## Applying the bump
 
-- **`startos/manifest/index.ts`** — set `images.lndg.source.dockerTag` to `ghcr.io/cryptosharks131/lndg:v<new version>`.
+- **`startos/manifest/index.ts`**: set `images.lndg.source.dockerTag` to `ghcr.io/cryptosharks131/lndg:v<new version>`.
