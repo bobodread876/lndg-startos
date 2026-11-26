@@ -13,11 +13,28 @@ jobs:
   BuildPackage:
     runs-on: ubuntu-latest
     steps:
-      - name: Prepare StartOS SDK
-        uses: Start9Labs/sdk@v1
-
       - name: Checkout services repository
         uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.7
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Install the released StartOS 0.3.5.1 SDK
+        working-directory: ${{ runner.temp }}
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y libarchive-tools squashfs-tools libavahi-client3
+          iso=startos-0.3.5.1-39de098_x86_64.iso
+          curl --fail --location --retry 3 -o "$iso" "https://github.com/Start9Labs/start-technologies/releases/download/v0.3.5.1/$iso"
+          echo "181fec43a3b7287fe6c6cdb70bcba79a5596fc2be1dbe5a54e09a4c142272155  $iso" | sha256sum --check
+          bsdtar -xOf "$iso" live/filesystem.squashfs > filesystem.squashfs
+          unsquashfs -cat filesystem.squashfs usr/bin/startbox > start-sdk
+          sudo install -m 0755 start-sdk /usr/local/bin/start-sdk
+          start-sdk --version
 
       - name: Build the service package
         id: build
