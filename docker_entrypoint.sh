@@ -13,14 +13,12 @@ LND_IP=$(getent hosts $LND_ADDRESS | awk '{ print $1 }')
 LNDG_ADDRESS='lndg.embassy'
 LNDG_PASS=$(yq e '.password' /root/start9/config.yaml)
 
-mkdir -p /mnt/lnd/data/chain/bitcoin/mainnet
-cp /mnt/lnd/*.macaroon /mnt/lnd/data/chain/bitcoin/mainnet
-
 echo
 echo "  Starting LNDg... "
 echo
 
-python initialize.py -net 'mainnet' -rpc $LND_IP':10009' -wn -dir /mnt/lnd -ip $LAN_ADDRESS -p $LNDG_PASS
+python initialize.py -net 'mainnet' -rpc "$LND_IP:10009" -wn -dir /mnt/lnd \
+  -mcrn /mnt/lnd/admin.macaroon -ip "$LAN_ADDRESS" -pw "$LNDG_PASS"
 
 echo "Modifying settings.py..."
 echo "CORS_ALLOW_CREDENTIALS = True
@@ -31,16 +29,6 @@ CSRF_TRUSTED_ORIGINS = ['https://"$LAN_ADDRESS"']
 " >> lndg/settings.py
 
 sed -i "s/ALLOWED_HOSTS = \[/&'"$TOR_ADDRESS"','"$LNDG_ADDRESS"',/" lndg/settings.py
-sed -i "s/+ '\/data\/chain\/bitcoin\/' + LND_NETWORK +/ + /" gui/lnd_deps/lnd_connect.py
-
-if ! grep -q "django_filters" lndg/settings.py; then 
-    sed -i "s/INSTALLED_APPS = \[/&'django_filters',/" lndg/settings.py
-fi  
-
-if ! grep -q "DEFAULT_FILTER_BACKENDS" lndg/settings.py; then
-    sed -i "s/REST_FRAMEWORK = {/&'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),/" lndg/settings.py
-fi  
-
 echo 'version: 2' > /root/start9/stats.yaml
 echo 'data:' >> /root/start9/stats.yaml
 echo '  Username: ' >> /root/start9/stats.yaml

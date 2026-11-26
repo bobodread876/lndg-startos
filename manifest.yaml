@@ -1,11 +1,11 @@
 id: lndg
 title: LNDg
-version: 1.10.1.1
+version: 1.11.1.0
 release-notes: |
-  * Bump max. LND version
-  * Bump YQ version to 4.49.2
+  * Update LNDg to 1.11.1 and refresh the Python certificate bundle.
+  * Preserve the existing database and login settings and read LND credentials from its public volume.
 license: mit
-wrapper-repo: "https://github.com/islandbitcoin/lndg-startos"
+wrapper-repo: "https://github.com/bobodread876/lndg-startos"
 upstream-repo: "https://github.com/cryptosharks131/lndg"
 support-site: "https://github.com/cryptosharks131/lndg/issues"
 marketing-site: "https://x.com/cryptosharks131"
@@ -48,7 +48,7 @@ volumes:
     package-id: lnd
     volume-id: main
     path: /public
-    readonly: false
+    readonly: true
   data:
     type: data
 interfaces:
