@@ -7,7 +7,7 @@ The objective of the Auto-Rebalancer is to automatically "refill" the liquidity 
 **LNDg is *very* useful if you are a vendor accepting lightning payments, constantly looking for inbound liquidity, or a lightning spender constantly looking for outbound liquiduty.**
 ## Upgrading on StartOS 0.3.5.x
 
-Install the update over your existing LNDg service. Startup applies the database migrations to the existing data volume. Your forwarding history, LNDg settings, and administrator login carry over.
+Stop LNDg and wait for StartOS to show it as stopped. Install the update over the existing service, then start LNDg. Startup applies the database migrations to the existing data volume. Your forwarding history, LNDg settings, and administrator login carry over.
 
 ## Instructions for LNDg
 
