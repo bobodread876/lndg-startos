@@ -11,11 +11,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Prepare StartOS SDK
-        uses: Start9Labs/sdk@v1
-
       - name: Checkout services repository
         uses: actions/checkout@v4
+
+      - name: Set up the legacy StartOS SDK
+        uses: ./.github/actions/setup-legacy-sdk
 
       - name: Build the service package
         run: |
